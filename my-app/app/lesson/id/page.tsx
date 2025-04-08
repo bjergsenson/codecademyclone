@@ -1,22 +1,20 @@
 "use client";
-import { useParams } from "next/navigation";
-import React from "react";
 
+import { useParams } from "next/navigation";
+import Editor from "@monaco-editor/react";
 
 export default function LessonPage() {
-  const params = useParams();
-  const lessonId = params?.id;
+  const { id } = useParams();
 
   return (
-    <div className="min-h-screen p-6">
-      <h1 className="text-2xl font-bold mb-4">Lesson: {lessonId}</h1>
-      <div className="mb-4">
-        <p>This is where your lesson content and code editor will go.</p>
-      </div>
-      <textarea
-        placeholder="Write your code here..."
-        className="w-full h-60 p-4 font-mono border rounded-lg shadow-inner"
-      ></textarea>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Lesson: {id}</h1>
+      <Editor
+        height="400px"
+        defaultLanguage={id === "python" ? "python" : id}
+        defaultValue="// Start coding..."
+        theme="vs-dark"
+      />
     </div>
   );
 }
