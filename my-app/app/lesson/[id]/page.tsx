@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { lessons } from "@/app/data/lessons";
 import Editor from "@monaco-editor/react";
+import initSqlJs from "sql.js";
 
 export default function LessonPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,7 @@ export default function LessonPage() {
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
   const [pyodide, setPyodide] = useState<any>(null);
+  const [SQL, setSQL] = useState<any>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(`lesson-code-${id}`);
@@ -21,7 +23,6 @@ export default function LessonPage() {
       setCode(lesson?.starterCode || "");
     }
 
-    // Load Pyodide only once
     const loadPyodide = async () => {
       if (!pyodide && id === "python") {
         const pyodidePkg = await import("https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js");
@@ -30,7 +31,15 @@ export default function LessonPage() {
       }
     };
 
+    const loadSqlJs = async () => {
+      if (!SQL && id === "sql") {
+        const SQLModule = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
+        setSQL(SQLModule);
+      }
+    };
+
     loadPyodide();
+    loadSqlJs();
   }, [id, lesson]);
 
   const handleCodeChange = (value: string | undefined) => {
@@ -71,6 +80,29 @@ export default function LessonPage() {
         setOutput(result?.toString() || "(no output)");
       } catch (err: any) {
         setOutput("🐍 Python Error: " + err.message);
+      }
+    } else if (language === "sql") {
+      if (!SQL) {
+        setOutput("⏳ Loading SQL engine...");
+        return;
+      }
+      try {
+        const db = new SQL.Database();
+        const results = db.exec(code);
+        if (results.length === 0) {
+          setOutput("✅ SQL executed (no result set)");
+        } else {
+          const table = results
+            .map(({ columns, values }) => {
+              const header = columns.join(" | ");
+              const rows = values.map((row: any[]) => row.join(" | ")).join("\n");
+              return `${header}\n${"-".repeat(header.length)}\n${rows}`;
+            })
+            .join("\n\n");
+          setOutput(table);
+        }
+      } catch (err: any) {
+        setOutput("🛑 SQL Error: " + err.message);
       }
     } else {
       setOutput("⚠️ Code execution for this language is not supported yet.");
