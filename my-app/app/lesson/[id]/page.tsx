@@ -4,9 +4,9 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { lessons } from "@/app/data/lessons";
 import Editor from "@monaco-editor/react";
-import initSqlJs from "sql.js";
 
 export default function LessonPage() {
+  let initSqlJs: any;
   const { id } = useParams<{ id: string }>();
   const lesson = lessons.find((l) => l.id === id);
 
@@ -33,7 +33,9 @@ export default function LessonPage() {
 
     const loadSqlJs = async () => {
       if (!SQL && id === "sql") {
-        const SQLModule = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
+        const module = await import("https://sql.js.org/dist/sql-wasm.js");
+        initSqlJs = module.default;
+        const SQLModule = await initSqlJs({ locateFile: (file: string) => `https://sql.js.org/dist/${file}` });
         setSQL(SQLModule);
       }
     };
