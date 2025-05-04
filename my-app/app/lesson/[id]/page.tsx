@@ -1,41 +1,57 @@
+// app/lesson/[id]/page.tsx
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { lessons } from "@/app/data/lessons";
+import Editor from "@monaco-editor/react";
 
 export default function LessonPage() {
-  const { id } = useParams();
-  const lessonId = id as keyof typeof lessons;
-  const lesson = lessons[lessonId];
+  const { id } = useParams<{ id: string }>();
+  const lesson = lessons.find((l) => l.id === id);
 
   const [code, setCode] = useState("");
 
+  // Load saved code
   useEffect(() => {
-    if (lesson) {
-      const saved = localStorage.getItem(`lesson-code-${lessonId}`);
-      setCode(saved || lesson.starterCode);
+    const saved = localStorage.getItem(`lesson-code-${id}`);
+    if (saved) {
+      setCode(saved);
+    } else {
+      setCode(lesson?.starterCode || "");
     }
-  }, [lessonId]);
+  }, [id, lesson]);
 
-  const handleChange = (value: string) => {
-    setCode(value);
-    localStorage.setItem(`lesson-code-${lessonId}`, value);
+  // Save on change
+  const handleCodeChange = (value: string | undefined) => {
+    setCode(value || "");
+    localStorage.setItem(`lesson-code-${id}`, value || "");
   };
 
-  if (!lesson) {
-    return <p className="p-6">❌ Lesson not found.</p>;
-  }
+  // Choose editor language
+  const languageMap: Record<string, string> = {
+    js: "javascript",
+    python: "python",
+    sql: "sql",
+  };
+
+  const language = languageMap[id as string] || "javascript";
+
+  if (!lesson) return <p>Lesson not found</p>;
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-3xl font-bold">{lesson.title}</h1>
-      <p className="text-gray-700">{lesson.description}</p>
-      <textarea
-        className="w-full h-64 p-2 border rounded font-mono"
-        value={code}
-        onChange={(e) => handleChange(e.target.value)}
-      />
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">{lesson.title}</h1>
+      <p className="mb-4">{lesson.description}</p>
+      <div className="h-[400px] border rounded">
+        <Editor
+          height="100%"
+          defaultLanguage={language}
+          value={code}
+          theme="vs-dark"
+          onChange={handleCodeChange}
+        />
+      </div>
     </div>
   );
 }
