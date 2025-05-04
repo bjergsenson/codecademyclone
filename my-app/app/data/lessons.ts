@@ -1,19 +1,20 @@
-// data/lessons.ts
-
-export const lessons = {
-  python: {
+export const lessons = [
+  {
+    id: "python",
     title: "Intro to Python",
-    description: "Learn how to print your first message in Python!",
-    starterCode: `print("Hello, world!")`,
+    description: "Learn basic Python syntax.",
+    starterCode: 'print("Hello, Python!")',
   },
-  js: {
+  {
+    id: "js",
     title: "Intro to JavaScript",
-    description: "Let's write your first JS function.",
-    starterCode: `function greet() {\n  console.log("Hello!");\n}`,
+    description: "Learn how to write JS code.",
+    starterCode: 'console.log("Hello, JS!");',
   },
-  sql: {
+  {
+    id: "sql",
     title: "Intro to SQL",
-    description: "Write your first SELECT statement.",
-    starterCode: `SELECT * FROM users;`,
+    description: "Learn how to write basic SQL queries.",
+    starterCode: "SELECT * FROM users;",
   },
-};
+];
