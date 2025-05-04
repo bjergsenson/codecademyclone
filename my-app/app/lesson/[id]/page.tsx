@@ -11,6 +11,7 @@ export default function LessonPage() {
 
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
+  const [pyodide, setPyodide] = useState<any>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(`lesson-code-${id}`);
@@ -19,6 +20,17 @@ export default function LessonPage() {
     } else {
       setCode(lesson?.starterCode || "");
     }
+
+    // Load Pyodide only once
+    const loadPyodide = async () => {
+      if (!pyodide && id === "python") {
+        const pyodidePkg = await import("https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js");
+        const loaded = await pyodidePkg.loadPyodide();
+        setPyodide(loaded);
+      }
+    };
+
+    loadPyodide();
   }, [id, lesson]);
 
   const handleCodeChange = (value: string | undefined) => {
@@ -34,27 +46,34 @@ export default function LessonPage() {
 
   const language = languageMap[id as string] || "javascript";
 
-  const runCode = () => {
-    if (language !== "javascript") {
-      setOutput("⚠️ Code execution is only supported for JavaScript at this time.");
-      return;
-    }
-
-    try {
-      const consoleLog: string[] = [];
-      const customConsole = {
-        log: (...args: any[]) => {
-          consoleLog.push(args.join(" "));
-        },
-      };
-
-      // Create a function with custom console
-      const func = new Function("console", code);
-      func(customConsole);
-
-      setOutput(consoleLog.join("\n") || "(no output)");
-    } catch (err: any) {
-      setOutput("❌ Error: " + err.message);
+  const runCode = async () => {
+    if (language === "javascript") {
+      try {
+        const consoleLog: string[] = [];
+        const customConsole = {
+          log: (...args: any[]) => {
+            consoleLog.push(args.join(" "));
+          },
+        };
+        const func = new Function("console", code);
+        func(customConsole);
+        setOutput(consoleLog.join("\n") || "(no output)");
+      } catch (err: any) {
+        setOutput("❌ Error: " + err.message);
+      }
+    } else if (language === "python") {
+      if (!pyodide) {
+        setOutput("⏳ Loading Python runtime...");
+        return;
+      }
+      try {
+        const result = await pyodide.runPythonAsync(code);
+        setOutput(result?.toString() || "(no output)");
+      } catch (err: any) {
+        setOutput("🐍 Python Error: " + err.message);
+      }
+    } else {
+      setOutput("⚠️ Code execution for this language is not supported yet.");
     }
   };
 
