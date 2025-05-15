@@ -11,7 +11,21 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <head>
+        {/* ✅ Add SQL.js CDN script */}
+        <script
+          src="https://sql.js.org/dist/sql-wasm.js"
+          type="text/javascript"
+          async
+        ></script>
+        {/* ✅ Add Pyodide CDN */}
+        <script
+          src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"
+          type="text/javascript"
+          defer
+        ></script>
+      </head>
+      <body className="bg-gray-50 text-gray-900">{children}</body>
     </html>
   );
 }

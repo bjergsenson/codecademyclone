@@ -12,9 +12,9 @@ export const lessons = [
     starterCode: 'console.log("Hello, JS!");',
   },
   {
-    id: "sql",
-    title: "Intro to SQL",
-    description: "Learn how to write basic SQL queries.",
-    starterCode: "SELECT * FROM users;",
+    id: 'sql',
+    title: 'SQL Basics',
+    description: 'Learn to query data with SQL',
+    code: `CREATE TABLE users (id INTEGER, name TEXT);\nINSERT INTO users VALUES (1, 'Alice'), (2, 'Bob');\nSELECT * FROM users;`,
   },
 ];
