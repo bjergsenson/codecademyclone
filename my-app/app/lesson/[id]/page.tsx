@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { useParams } from 'next/navigation';
+import { log } from 'console';
 
 const LessonPage = () => {
   const { id } = useParams();
@@ -41,30 +42,24 @@ const LessonPage = () => {
       } else if (id === 'python') {
         try {
           // ✅ Wait for Pyodide to be loaded
-          async function ensurePyodide() {
-            if (!(window as any).loadPyodide) {
-              await new Promise<void>((resolve, reject) => {
-                const check = () => {
-                  if ((window as any).loadPyodide) resolve();
-                  else setTimeout(check, 50); // Retry every 50ms until available
-                };
-                check();
-              });
-            }
-
-            if (!(window as any).pyodide) {
-              const pyodide = await (window as any).loadPyodide({
-                indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/',
-              });
-              (window as any).pyodide = pyodide;
-            }
-
-            return (window as any).pyodide;
+          // init Pyodide
+          async function main() {
+            let pyodide = loadPyodide();
+            log("Ready!\n")
+            return pyodide;
           }
+          let pyodideReadyPromise = main();
 
-          const pyodide = await ensurePyodide();
-          const result = await pyodide.runPythonAsync(code);
-          setOutput(String(result));
+          async function evaluatePython() {
+            let pyodide = await pyodideReadyPromise;
+            try {
+              let output = pyodide.runPython(code);
+              setOutput(String(output));;
+            } catch (err: any) {
+              setOutput(err);
+              return output;
+            }
+          }
         } catch (err) {
           setOutput('Python Error: ' + err);
         }
@@ -112,3 +107,7 @@ const LessonPage = () => {
 };
 
 export default LessonPage;
+
+function loadPyodide() {
+  throw new Error('Function not implemented.');
+}

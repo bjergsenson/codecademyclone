@@ -19,11 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           async
         ></script>
         {/* ✅ Add Pyodide CDN */}
-        <script
-          src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"
-          type="text/javascript"
-          defer
-        ></script>
+        <script src="https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.js"></script>
       </head>
       <body className="bg-gray-50 text-gray-900">{children}</body>
     </html>
