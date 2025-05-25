@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { useParams } from 'next/navigation';
-import { log } from 'console';
 
 const LessonPage = () => {
   const { id } = useParams();
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
   const [SQL, setSQL] = useState<any>(null);
+  const pyodideRef = useRef<any>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(`lesson-code-${id}`);
@@ -34,34 +34,38 @@ const LessonPage = () => {
     loadSqlJs();
   }, [id]);
 
+  // Ensure Pyodide is loaded
+  const ensurePyodide = async () => {
+    if (!pyodideRef.current) {
+      // Wait until loadPyodide is available
+      await new Promise<void>((resolve) => {
+        const check = () => {
+          if ((window as any).loadPyodide) resolve();
+          else setTimeout(check, 50);
+        };
+        check();
+      });
+
+      pyodideRef.current = await (window as any).loadPyodide({
+        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.6/full/',
+      });
+    }
+
+    return pyodideRef.current;
+  };
+
   const runCode = async () => {
     try {
       if (id === 'js') {
         const result = eval(code);
         setOutput(String(result));
       } else if (id === 'python') {
+        const pyodide = await ensurePyodide();
         try {
-          // ✅ Wait for Pyodide to be loaded
-          // init Pyodide
-          async function main() {
-            let pyodide = loadPyodide();
-            log("Ready!\n")
-            return pyodide;
-          }
-          let pyodideReadyPromise = main();
-
-          async function evaluatePython() {
-            let pyodide = await pyodideReadyPromise;
-            try {
-              let output = pyodide.runPython(code);
-              setOutput(String(output));;
-            } catch (err: any) {
-              setOutput(err);
-              return output;
-            }
-          }
-        } catch (err) {
-          setOutput('Python Error: ' + err);
+          const result = await pyodide.runPythonAsync(code);
+          setOutput(String(result));
+        } catch (err: any) {
+          setOutput(`Python Error: ${err.message}`);
         }
       } else if (id === 'sql') {
         if (!SQL) {
@@ -107,7 +111,3 @@ const LessonPage = () => {
 };
 
 export default LessonPage;
-
-function loadPyodide() {
-  throw new Error('Function not implemented.');
-}
